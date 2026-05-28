@@ -639,6 +639,14 @@ class ObstaclePoolManager {
         }
     }
 
+    reset() {
+        for (let i = 0; i < this.pool.length; i++) {
+            let obs = this.pool[i];
+            obs.isActive = false;
+            obs.visible = false;
+        }
+    }
+
     createObstacleContainer() {
         // Group structure to switch between Low Barriers and High Lasers easily
         const group = new THREE.Group();

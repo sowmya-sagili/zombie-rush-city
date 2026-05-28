@@ -1,3 +1,26 @@
+function cleanThreeJSObject(obj) {
+    if (!obj) return;
+    obj.traverse(child => {
+        if (child.isMesh) {
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => m.dispose());
+                } else {
+                    child.material.dispose();
+                }
+            }
+        }
+        if (child.isLight) {
+            if (child.shadow && child.shadow.map) {
+                child.shadow.map.dispose();
+            }
+        }
+    });
+}
+
 class GameCoordinator {
     constructor() {
         this.scene = null;
@@ -112,6 +135,60 @@ class GameCoordinator {
                 this.player.swing();
             }
         });
+
+        // Touch Input for Mobile Devices (Swipes & Taps)
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+
+        window.addEventListener('touchstart', (e) => {
+            if (this.gameState !== 'PLAYING') return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = performance.now();
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+            if (this.gameState !== 'PLAYING') return;
+
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+            const dt = performance.now() - touchStartTime;
+
+            const minSwipeDistance = 35; // pixels
+            const maxTapDuration = 250; // ms
+
+            // Check if it's a Tap
+            if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && dt < maxTapDuration) {
+                this.player.swing();
+                return;
+            }
+
+            // Otherwise, check for swipe directions
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal Swipe
+                if (Math.abs(dx) > minSwipeDistance) {
+                    if (dx > 0) {
+                        this.player.changeLane('right');
+                        audioEngine.playLaneDashSound();
+                    } else {
+                        this.player.changeLane('left');
+                        audioEngine.playLaneDashSound();
+                    }
+                }
+            } else {
+                // Vertical Swipe
+                if (Math.abs(dy) > minSwipeDistance) {
+                    if (dy < 0) {
+                        this.player.jump();
+                    } else {
+                        this.player.slide();
+                    }
+                }
+            }
+        }, { passive: true });
     }
 
     initUI() {
@@ -137,12 +214,17 @@ class GameCoordinator {
         // Spawn/Reset player
         if (this.player) {
             this.scene.remove(this.player.mesh);
+            cleanThreeJSObject(this.player.mesh);
         }
         this.player = new Player(this.scene, this.weaponTier, this.suitTier);
         this.scene.add(this.player.mesh);
 
         // Initialize dynamic road obstacles
-        window.obstaclePoolManager = new ObstaclePoolManager(this.scene);
+        if (!window.obstaclePoolManager) {
+            window.obstaclePoolManager = new ObstaclePoolManager(this.scene);
+        } else {
+            window.obstaclePoolManager.reset();
+        }
         window.isGameOver = false;
 
         // Persistent World Setup (avoids GC reallocation)
@@ -220,6 +302,7 @@ class GameCoordinator {
                 
                 if (this.player) {
                     this.scene.remove(this.player.mesh);
+                    cleanThreeJSObject(this.player.mesh);
                     this.player = new Player(this.scene, this.weaponTier, this.suitTier);
                     this.scene.add(this.player.mesh);
                 }
@@ -256,6 +339,7 @@ class GameCoordinator {
                 
                 if (this.player) {
                     this.scene.remove(this.player.mesh);
+                    cleanThreeJSObject(this.player.mesh);
                     this.player = new Player(this.scene, this.weaponTier, this.suitTier);
                     this.scene.add(this.player.mesh);
                 }
@@ -287,6 +371,7 @@ class GameCoordinator {
             
             if (this.player) {
                 this.scene.remove(this.player.mesh);
+                cleanThreeJSObject(this.player.mesh);
                 this.player = new Player(this.scene, 0, 0);
                 this.scene.add(this.player.mesh);
             }
@@ -432,9 +517,10 @@ class GameCoordinator {
                     const dx = this.player.mesh.position.x - cap.position.x;
                     const dy = this.player.mesh.position.y - cap.position.y;
                     const dz = this.player.mesh.position.z - cap.position.z;
-                    cap.position.x += dx * dt * 8.0;
-                    cap.position.y += dy * dt * 8.0;
-                    cap.position.z += dz * dt * 8.0;
+                    const lerpFactor = 1.0 - Math.exp(-8.0 * dt);
+                    cap.position.x += dx * lerpFactor;
+                    cap.position.y += dy * lerpFactor;
+                    cap.position.z += dz * lerpFactor;
                 }
             }
             
