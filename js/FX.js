@@ -161,6 +161,7 @@ class FXEngine {
         }
 
         // 2. Camera shake physics
+        const baseCamY = window.isMobileDevice ? 4.2 : 3.5;
         if (this.shakeIntensity > 0.01) {
             const dx = (Math.random() - 0.5) * this.shakeIntensity;
             const dy = (Math.random() - 0.5) * this.shakeIntensity;
@@ -168,14 +169,14 @@ class FXEngine {
             
             // Adjust camera position relative to player tracking
             this.camera.position.x = dx;
-            this.camera.position.y = 3.5 + dy;
+            this.camera.position.y = baseCamY + dy;
             // Z tracking is handled in Game.js, shake adds minor delta
             this.camera.position.z += dz;
 
             this.shakeIntensity *= this.shakeDecay;
         } else {
             this.camera.position.x = 0;
-            this.camera.position.y = 3.5;
+            this.camera.position.y = baseCamY;
         }
     }
 }

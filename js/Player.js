@@ -114,9 +114,13 @@ class Player {
         // Cyber Headlight / Torch pointing forward (negative Z) to illuminate road in dark mode
         const headlight = new THREE.SpotLight(glowColor, 3.5, 30, Math.PI / 4, 0.5, 1.0);
         headlight.position.set(0, 0.05, -0.25);
-        headlight.castShadow = true;
-        headlight.shadow.mapSize.width = 512;
-        headlight.shadow.mapSize.height = 512;
+        if (window.isMobileDevice) {
+            headlight.castShadow = false;
+        } else {
+            headlight.castShadow = true;
+            headlight.shadow.mapSize.width = 512;
+            headlight.shadow.mapSize.height = 512;
+        }
         
         // Target points forward
         const target = new THREE.Object3D();

@@ -1,3 +1,5 @@
+window.isMobileDevice = typeof window !== 'undefined' && typeof navigator !== 'undefined' && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+
 class SoundEngine {
     constructor() {
         this.ctx = null;
@@ -336,3 +338,14 @@ class SoundEngine {
 const Sound = new SoundEngine();
 const audioEngine = Sound;
 window.audioEngine = Sound;
+
+// One-time listener to resume AudioContext on first user interaction (critical for mobile browsers)
+if (typeof window !== 'undefined') {
+    const resumeAudio = () => {
+        Sound.resume();
+        window.removeEventListener('click', resumeAudio);
+        window.removeEventListener('touchstart', resumeAudio);
+    };
+    window.addEventListener('click', resumeAudio);
+    window.addEventListener('touchstart', resumeAudio, { passive: true });
+}

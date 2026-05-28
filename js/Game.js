@@ -67,6 +67,7 @@ class GameCoordinator {
 
     initThreeJS() {
         const container = document.getElementById('canvas-container');
+        const isMobile = window.isMobileDevice;
         
         // Scene setup
         this.scene = new THREE.Scene();
@@ -74,15 +75,21 @@ class GameCoordinator {
         this.scene.fog = new THREE.FogExp2(0x05050c, 0.022);
 
         // Camera setup
-        this.camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.set(0, 3.5, 6);
+        const dynamicFOV = isMobile ? 75 : 58;
+        this.camera = new THREE.PerspectiveCamera(dynamicFOV, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(0, isMobile ? 4.2 : 3.5, isMobile ? 7.5 : 6);
 
-        // Renderer setup
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Renderer setup - Disable expensive antialiasing and cap resolution scaling on mobile
+        this.renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: "high-performance" });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
+        
+        if (isMobile) {
+            this.renderer.shadowMap.enabled = false;
+        } else {
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        }
         container.appendChild(this.renderer.domElement);
 
         // Lighting
@@ -91,16 +98,22 @@ class GameCoordinator {
 
         this.dirLight = new THREE.DirectionalLight(0xa5b5e8, 1.25);
         this.dirLight.position.set(10, 25, -15);
-        this.dirLight.castShadow = true;
-        this.dirLight.shadow.mapSize.width = 1024;
-        this.dirLight.shadow.mapSize.height = 1024;
-        this.dirLight.shadow.camera.near = 0.5;
-        this.dirLight.shadow.camera.far = 80;
-        const d = 15;
-        this.dirLight.shadow.camera.left = -d;
-        this.dirLight.shadow.camera.right = d;
-        this.dirLight.shadow.camera.top = d;
-        this.dirLight.shadow.camera.bottom = -d;
+        
+        if (isMobile) {
+            this.dirLight.castShadow = false;
+        } else {
+            this.dirLight.castShadow = true;
+            this.dirLight.shadow.mapSize.width = 1024;
+            this.dirLight.shadow.mapSize.height = 1024;
+            this.dirLight.shadow.camera.near = 0.5;
+            this.dirLight.shadow.camera.far = 80;
+            const d = 15;
+            this.dirLight.shadow.camera.left = -d;
+            this.dirLight.shadow.camera.right = d;
+            this.dirLight.shadow.camera.top = d;
+            this.dirLight.shadow.camera.bottom = -d;
+        }
+        
         this.scene.add(this.dirLight);
         this.scene.add(this.dirLight.target); // Make sure target is in scene for updating position
 
@@ -388,7 +401,8 @@ class GameCoordinator {
         let dt = (time - this.lastTime) / 1000.0;
         this.lastTime = time;
 
-        if (dt > 0.1) dt = 0.1;
+        const maxDt = window.isMobileDevice ? 0.05 : 0.1;
+        if (dt > maxDt) dt = maxDt;
 
         // 1. Progress speed scaling
         this.currentSpeed = Math.min(this.baseSpeed + (this.score * 0.0006), this.maxSpeed);
@@ -458,8 +472,9 @@ class GameCoordinator {
         }
 
         // 7. Track Camera and directional light (Moonlight follows player)
-        this.camera.position.z = this.player.mesh.position.z + 5.5;
-        this.camera.lookAt(0, 1.25, this.player.mesh.position.z - 3.8);
+        const isMobile = window.isMobileDevice;
+        this.camera.position.z = this.player.mesh.position.z + (isMobile ? 7.5 : 5.5);
+        this.camera.lookAt(0, 1.25, this.player.mesh.position.z - (isMobile ? 5.0 : 3.8));
 
         if (this.dirLight) {
             this.dirLight.position.set(10, 25, this.player.mesh.position.z - 15);
@@ -616,6 +631,8 @@ class GameCoordinator {
     }
 
     onWindowResize() {
+        const isMobile = window.isMobileDevice;
+        this.camera.fov = isMobile ? 75 : 58;
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);

@@ -39,8 +39,10 @@ class WorldGenerator {
             cap.userData = { active: false };
             
             // Neon pointlight glow
-            const glow = new THREE.PointLight(0xff007f, 0.4, 3);
-            cap.add(glow);
+            if (!window.isMobileDevice) {
+                const glow = new THREE.PointLight(0xff007f, 0.4, 3);
+                cap.add(glow);
+            }
             
             this.scene.add(cap);
             this.capsulePool.push(cap);
@@ -208,12 +210,14 @@ class WorldGenerator {
             head.position.set(direction * 1.0, 4.5, 0);
             lightGroup.add(head);
 
-            const spotLight = new THREE.SpotLight(bulbColor, 1.2, 12, Math.PI/4, 0.5, 1.0);
-            spotLight.position.set(direction * 1.0, 4.4, 0);
-            spotLight.target.position.set(direction * 1.0, 0, 0);
-            
-            lightGroup.add(spotLight);
-            lightGroup.add(spotLight.target);
+            if (!window.isMobileDevice) {
+                const spotLight = new THREE.SpotLight(bulbColor, 1.2, 12, Math.PI/4, 0.5, 1.0);
+                spotLight.position.set(direction * 1.0, 4.4, 0);
+                spotLight.target.position.set(direction * 1.0, 0, 0);
+                
+                lightGroup.add(spotLight);
+                lightGroup.add(spotLight.target);
+            }
             tile.add(lightGroup);
         });
 
@@ -307,7 +311,9 @@ class WorldGenerator {
         const light = new THREE.PointLight(0xff003c, 0.5, 4);
         light.position.set(0, 1.8, 0.1);
         group.add(laser);
-        group.add(light);
+        if (!window.isMobileDevice) {
+            group.add(light);
+        }
         return group;
     }
 
@@ -344,14 +350,16 @@ class WorldGenerator {
         group.add(redSiren);
         group.add(blueSiren);
 
-        const lightR = new THREE.PointLight(0xff0000, 0, 6);
-        lightR.position.set(0.4, 1.5, -0.3);
-        lightR.name = 'sirenLightR';
-        const lightB = new THREE.PointLight(0x0000ff, 0, 6);
-        lightB.position.set(0.4, 1.5, 0.3);
-        lightB.name = 'sirenLightB';
-        group.add(lightR);
-        group.add(lightB);
+        if (!window.isMobileDevice) {
+            const lightR = new THREE.PointLight(0xff0000, 0, 6);
+            lightR.position.set(0.4, 1.5, -0.3);
+            lightR.name = 'sirenLightR';
+            const lightB = new THREE.PointLight(0x0000ff, 0, 6);
+            lightB.position.set(0.4, 1.5, 0.3);
+            lightB.name = 'sirenLightB';
+            group.add(lightR);
+            group.add(lightB);
+        }
 
         const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.3, 12);
         const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.9 });
@@ -581,9 +589,11 @@ class WorldGenerator {
         laser.position.set(0, -0.8, 0);
         body.add(laser);
 
-        const pointLight = new THREE.PointLight(0xff003c, 0.6, 5);
-        pointLight.position.set(0, -1.0, 0);
-        body.add(pointLight);
+        if (!window.isMobileDevice) {
+            const pointLight = new THREE.PointLight(0xff003c, 0.6, 5);
+            pointLight.position.set(0, -1.0, 0);
+            body.add(pointLight);
+        }
 
         return group;
     }
