@@ -1,0 +1,437 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #05050a;
+    font-family: 'Rajdhani', sans-serif;
+    color: #e0e0ff;
+}
+
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* --- HUD Overlay --- */
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.hud-panel {
+    background: rgba(10, 10, 20, 0.65);
+    border: 1px solid rgba(0, 255, 204, 0.3);
+    border-radius: 8px;
+    padding: 12px 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
+}
+
+.score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #8080a0;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: #00ffcc;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+.capsules-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.capsule-icon {
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #ff007f 30%, #a00050 90%);
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ff007f;
+    animation: pulse 1.5s infinite alternate;
+}
+
+.capsule-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ff007f;
+    text-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+}
+
+.hud-center-left {
+    position: absolute;
+    top: 50%;
+    left: 24px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.combo-badge {
+    background: rgba(255, 85, 0, 0.15);
+    border: 1px solid rgba(255, 85, 0, 0.5);
+    padding: 8px 15px;
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 15px rgba(255, 85, 0, 0.2);
+}
+
+.combo-badge.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.combo-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    color: #ff5500;
+    letter-spacing: 1px;
+}
+
+.combo-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffaa00;
+    text-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
+}
+
+/* --- Menus Base --- */
+.screen-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, rgba(10,10,25,0.4) 0%, rgba(5,5,10,0.85) 100%);
+    backdrop-filter: blur(8px);
+    transition: opacity 0.5s ease;
+}
+
+.menu-card {
+    background: rgba(15, 15, 30, 0.8);
+    border: 2px solid #00ffcc;
+    border-radius: 16px;
+    padding: 40px;
+    width: 480px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(0, 255, 204, 0.25), inset 0 0 20px rgba(0, 255, 204, 0.05);
+    transform: scale(0.9);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.screen-overlay.active .menu-card {
+    transform: scale(1);
+    opacity: 1;
+}
+
+h1.game-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 38px;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg, #00ffcc, #ff007f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(0,255,204,0.4));
+    animation: titleGlow 2s infinite alternate;
+}
+
+.menu-description {
+    font-size: 16px;
+    color: #a0a0c0;
+    line-height: 1.5;
+}
+
+.btn {
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(135deg, #00ffcc 0%, #0088cc 100%);
+    border: none;
+    border-radius: 8px;
+    color: #050510;
+    font-size: 18px;
+    font-weight: 900;
+    padding: 15px 30px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+    outline: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 255, 204, 0.6);
+    background: linear-gradient(135deg, #00ffcc 0%, #00ffb7 100%);
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(0, 255, 204, 0.4);
+    color: #00ffcc;
+    box-shadow: none;
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 255, 204, 0.1);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+}
+
+/* --- Control Instructions --- */
+.controls-guide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    text-align: left;
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.control-key {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    color: #ff007f;
+    font-weight: bold;
+}
+
+.control-desc {
+    font-size: 13px;
+    color: #8080a0;
+}
+
+/* --- Shop Overlay --- */
+#shop-overlay {
+    display: none;
+}
+
+#shop-overlay.active {
+    display: flex;
+}
+
+.shop-card {
+    border-color: #ff007f;
+    box-shadow: 0 0 40px rgba(255, 0, 127, 0.25);
+    width: 600px;
+}
+
+.shop-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: #ff007f;
+    text-shadow: 0 0 15px rgba(255,0,127,0.4);
+    margin: 0;
+}
+
+.shop-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.shop-item {
+    background: rgba(10, 10, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.2s ease;
+}
+
+.shop-item.unlocked {
+    border-color: rgba(0, 255, 204, 0.3);
+}
+
+.shop-item-info {
+    text-align: left;
+}
+
+.shop-item-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.shop-item-desc {
+    font-size: 13px;
+    color: #8080a0;
+    margin-top: 3px;
+}
+
+.shop-item-cost {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    color: #ff007f;
+    font-weight: bold;
+}
+
+.btn-buy {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 16px;
+    background: #ff007f;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-buy:hover {
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
+    background: #ff2299;
+}
+
+.btn-buy.maxed {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.btn-buy.disabled {
+    background: rgba(255,0,127,0.3);
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* --- Game Over Overlay --- */
+#gameover-overlay {
+    display: none;
+}
+
+#gameover-overlay.active {
+    display: flex;
+}
+
+.gameover-card {
+    border-color: #ff3333;
+    box-shadow: 0 0 40px rgba(255, 51, 51, 0.35);
+}
+
+.gameover-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 40px;
+    font-weight: 900;
+    color: #ff3333;
+    text-shadow: 0 0 20px rgba(255,51,51,0.5);
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 51, 51, 0.15);
+}
+
+.stat-box-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-top: 5px;
+}
+
+/* --- Animations --- */
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 10px #ff007f; }
+    100% { transform: scale(1.15); box-shadow: 0 0 20px #ff3399; }
+}
+
+@keyframes titleGlow {
+    0% { filter: drop-shadow(0 0 8px rgba(0,255,204,0.3)); }
+    100% { filter: drop-shadow(0 0 18px rgba(255,0,127,0.5)); }
+}

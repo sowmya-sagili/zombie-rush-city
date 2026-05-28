@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zombie Rush City: Cybernetic Runner</title>
+    
+    <!-- Custom Cyber Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Start/Main Menu Overlay -->
+    <div id="start-overlay" class="screen-overlay active">
+        <div class="menu-card">
+            <h1 class="game-title">ZOMBIE RUSH CITY</h1>
+            <p class="menu-description">
+                Sprint through the neon highway of a decaying metropolis. Use your energy bat to smash approaching zombies into skyscrapers before they devour you!
+            </p>
+            
+            <div class="controls-guide">
+                <div class="control-item">
+                    <span class="control-key">A / D or ← / →</span>
+                    <span class="control-desc">Switch Lanes</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-key">W or ↑ or Space</span>
+                    <span class="control-desc">Jump over blockades</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-key">S or ↓</span>
+                    <span class="control-desc">Slide under lasers</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-key">Left Click</span>
+                    <span class="control-desc">Melee Weapon Swing</span>
+                </div>
+            </div>
+
+            <div>
+                <button id="btn-start" class="btn">INITIALIZE RUN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-Game HUD overlay -->
+    <div id="hud">
+        <div class="hud-top">
+            <div class="hud-panel score-container">
+                <span class="label">SCORE</span>
+                <span id="score-val" class="value">0</span>
+            </div>
+            
+            <div class="hud-panel capsules-container">
+                <div class="capsule-icon"></div>
+                <span id="capsules-val" class="capsule-value">0</span>
+            </div>
+        </div>
+        
+        <div class="hud-center-left">
+            <div id="combo-badge" class="combo-badge">
+                <span class="combo-title">COMBO MULTIPLIER</span>
+                <div id="combo-val" class="combo-val">2X</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop/Upgrade Overlay (Glassmorphism Modal) -->
+    <div id="shop-overlay" class="screen-overlay">
+        <div class="menu-card shop-card" style="max-height: 85vh; overflow-y: auto;">
+            <h2 class="shop-title">CYBER MOD SHOP</h2>
+            <p class="menu-description">Trade bio-capsules to synthesize advanced weaponry and armor matrices.</p>
+            
+            <div class="shop-items">
+                <!-- Weapon Upgrade 1 -->
+                <div class="shop-item unlocked">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">WEAPONRY SYNTHESIS I</div>
+                        <div id="weapon-desc" class="shop-item-desc">Unlock Cyber Katana: Range 3.6m, faster speed.</div>
+                    </div>
+                    <div class="shop-item-cost">
+                        <div class="capsule-icon" style="width:14px; height:14px;"></div>
+                        <span id="weapon-cost">25</span>
+                        <button id="btn-buy-weapon" class="btn-buy">UPGRADE</button>
+                    </div>
+                </div>
+                <!-- Suit Upgrade 1 -->
+                <div class="shop-item unlocked" style="margin-top: 5px;">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">CYBER SUIT SYNTHESIS I</div>
+                        <div id="suit-desc" class="shop-item-desc">Unlock Cyber Suit: Glowing pink cyber armor.</div>
+                    </div>
+                    <div class="shop-item-cost">
+                        <div class="capsule-icon" style="width:14px; height:14px;"></div>
+                        <span id="suit-cost">60</span>
+                        <button id="btn-buy-suit" class="btn-buy">UPGRADE</button>
+                    </div>
+                </div>
+                <!-- Weapon Upgrade 2 -->
+                <div class="shop-item unlocked" style="margin-top: 5px;">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">WEAPONRY SYNTHESIS II</div>
+                        <div id="hammer-desc" class="shop-item-desc">Unlock Doom Hammer: Range 4.6m, massive shockwave.</div>
+                    </div>
+                    <div class="shop-item-cost">
+                        <div class="capsule-icon" style="width:14px; height:14px;"></div>
+                        <span id="hammer-cost">500</span>
+                        <button id="btn-buy-hammer" class="btn-buy">UPGRADE</button>
+                    </div>
+                </div>
+                <!-- Suit Upgrade 2 -->
+                <div class="shop-item unlocked" style="margin-top: 5px;">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">CYBER SUIT SYNTHESIS II</div>
+                        <div id="gold-desc" class="shop-item-desc">Unlock Quantum Armor: Radiant gold weave armor.</div>
+                    </div>
+                    <div class="shop-item-cost">
+                        <div class="capsule-icon" style="width:14px; height:14px;"></div>
+                        <span id="gold-cost">1000</span>
+                        <button id="btn-buy-gold" class="btn-buy">UPGRADE</button>
+                    </div>
+                </div>
+                <!-- Magnet Upgrade -->
+                <div class="shop-item unlocked" style="margin-top: 5px;">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">VORTEX MAGNET</div>
+                        <div id="magnet-desc" class="shop-item-desc">Unlock Vortex Magnet: Pulls coins from nearby lanes.</div>
+                    </div>
+                    <div class="shop-item-cost">
+                        <div class="capsule-icon" style="width:14px; height:14px;"></div>
+                        <span id="magnet-cost">5000</span>
+                        <button id="btn-buy-magnet" class="btn-buy">UPGRADE</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 10px;">
+                <button id="btn-close-shop" class="btn btn-secondary" style="width: 100%;">RESUME PLAY</button>
+                <button id="btn-reset-progress" class="btn" style="width: 100%; background: linear-gradient(135deg, #ff3333 0%, #cc0000 100%); color: #ffffff; border: none; font-size: 14px; padding: 10px 0; border-radius: 6px; letter-spacing: 1px; box-shadow: 0 0 10px rgba(255, 51, 51, 0.2);">START FROM ZERO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over overlay -->
+    <div id="gameover-overlay" class="screen-overlay">
+        <div class="menu-card gameover-card" style="border-color: #ff0055; box-shadow: 0 0 40px rgba(255, 0, 85, 0.35);">
+            <h1 class="gameover-title" style="color: #ff0055; text-shadow: 0 0 15px rgba(255,0,85,0.5);">RUN TERMINATED</h1>
+            <p class="menu-description" style="color:#ff8888; font-size: 15px; margin-top: -10px;">Critical crash: Player bio-signals terminated by horde.</p>
+            
+            <div style="background: rgba(255,255,255,0.04); border-radius: 8px; padding: 20px; text-align: left; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="label" style="font-size: 13px; margin: 0; color: #8080a0;">Distance Steps:</span>
+                    <span id="go-score" style="color: #00ffcc; font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: bold; text-shadow: 0 0 8px rgba(0, 255, 204, 0.3);">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 5px;">
+                    <span class="label" style="font-size: 13px; margin: 0; color: #8080a0;">Bio-Capsules Gathered:</span>
+                    <span id="go-capsules" style="color: #ffaa00; font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: bold; text-shadow: 0 0 8px rgba(255, 170, 0, 0.3);">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="label" style="font-size: 11px; margin: 0; color: rgba(255,255,255,0.5);">PERSONAL RECORD HIGH STEPS:</span>
+                    <span id="go-high" style="color: #ffffff; font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold;">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="label" style="font-size: 11px; margin: 0; color: rgba(255,255,255,0.5);">MAX CAPSULES HELD BANK:</span>
+                    <span id="go-capsules-bank" style="color: #ffffff; font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold;">0</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <button id="btn-restart" class="btn" style="flex: 1;">START AGAIN</button>
+                <button id="btn-shop-from-go" class="btn btn-secondary" style="flex: 1; border-color: #ff0055; color: #ff0055; box-shadow: none;">UPGRADE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modular Game Script Imports -->
+    <script src="js/Sound.js"></script>
+    <script src="js/FX.js"></script>
+    <script src="js/Player.js"></script>
+    <script src="js/Zombie.js"></script>
+    <script src="js/World.js"></script>
+    <script src="js/UI.js"></script>
+    <script src="js/Game.js"></script>
+
+    <!-- Main Game Orchestrator Bootloader -->
+    <script>
+        window.addEventListener('load', () => {
+            window.game = new GameCoordinator();
+        });
+    </script>
+</body>
+</html>
